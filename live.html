@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keily – Live-Zeichnungsstand</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="stylesheet" href="styles.css">
+<style>
+  html, body { height: 100%; }
+  body { display: grid; grid-template-columns: 1.25fr .75fr; overflow: hidden; }
+  .stage { display: flex; flex-direction: column; justify-content: center; gap: 3vh; padding: 6vh 5vw; }
+  .stage .brand { font-size: 5vh; align-self: flex-start; }
+  .stage h1 { font-size: 7vh; }
+  .big { font-family: var(--display); font-size: 17vh; line-height: .9; color: var(--ink); }
+  .of { font-size: 3.6vh; font-weight: 700; }
+  .bar-live { height: 7vh; border-width: 5px; background: #fff; }
+  .bar-live i { background: var(--green); border-right-width: 5px; }
+  .meta { font-size: 3vh; font-weight: 600; }
+  .side { background: var(--green-deep); color: var(--glove); border-left: 5px solid var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3vh; padding: 5vh 3vw; text-align: center; }
+  .side h2 { font-size: 6vh; color: var(--glove); }
+  .qr { background: #fff; border: 5px solid var(--ink); border-radius: 3vh; padding: 2.5vh; box-shadow: 1.2vh 1.2vh 0 var(--ink); }
+  .qr img { width: 40vh; height: 40vh; image-rendering: pixelated; }
+  .url { font-family: var(--display); font-size: 4vh; color: var(--mustard); }
+  .voll .big { color: var(--green-deep); }
+  @media (max-aspect-ratio: 1/1) { body { grid-template-columns: 1fr; overflow: auto; } }
+</style>
+</head>
+<body>
+  <section class="stage">
+    <span class="brand">Keily</span>
+    <h1 id="headline">Jetzt Teil von Keily werden</h1>
+    <div>
+      <div class="big" data-summe>– €</div>
+      <p class="of">von 7.840 € gezeichnet</p>
+    </div>
+    <div class="bar bar-live" aria-hidden="true"><i data-fill></i></div>
+    <p class="meta"><span data-anzahl>0</span> Zeichnungen, noch <span data-rest>7.840 €</span> verfügbar</p>
+  </section>
+  <aside class="side">
+    <h2>Mitzeichnen</h2>
+    <div class="qr"><img src="assets/qr.svg" alt="QR-Code zur Keily-Seite"></div>
+    <p class="url">keily.pages.dev</p>
+  </aside>
+<script>
+(function () {
+  var SB_URL = 'https://ntwydmezshfjxvhwwhli.supabase.co';
+  var SB_KEY = 'sb_publishable_GiWbUts3EQShmZlCSjuBJw_EzED6FMh';
+  var shown = 0;
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function euro(n) { return Math.round(n).toLocaleString('de-DE') + ' €'; }
+  function all(s) { return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  function animate(target) {
+    var start = shown, t0 = null, dur = reduced ? 0 : 1400;
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var k = dur ? Math.min(1, (ts - t0) / dur) : 1;
+      var v = start + (target - start) * (1 - Math.pow(1 - k, 3));
+      all('[data-summe]').forEach(function (el) { el.textContent = euro(v); });
+      if (k < 1) requestAnimationFrame(step); else shown = target;
+    }
+    requestAnimationFrame(step);
+  }
+  function poll() {
+    fetch(SB_URL + '/rest/v1/rpc/stand', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: '{}' })
+      .then(function (r) { return r.json(); })
+      .then(function (s) {
+        if (typeof s.summe !== 'number') return;
+        if (s.summe !== shown) animate(s.summe);
+        all('[data-fill]').forEach(function (el) { el.style.width = Math.min(100, s.summe / s.ziel * 100) + '%'; });
+        all('[data-anzahl]').forEach(function (el) { el.textContent = s.anzahl.toLocaleString('de-DE'); });
+        all('[data-rest]').forEach(function (el) { el.textContent = euro(Math.max(0, s.ziel - s.summe)); });
+        var voll = s.summe >= s.ziel;
+        document.body.classList.toggle('voll', voll);
+        document.getElementById('headline').textContent = voll ? 'Vollständig gezeichnet – danke!' : 'Jetzt Teil von Keily werden';
+      }).catch(function () {});
+  }
+  poll(); setInterval(poll, 3000);
+})();
+</script>
+</body>
+</html>
