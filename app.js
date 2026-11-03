@@ -10,7 +10,7 @@
     { name: 'Mara D.', beruf: 'Hörakustikerin', foto: 'assets/team/mara.jpg' },
     { name: 'Simone H.', beruf: 'Informationselektronikerin', foto: 'assets/team/simone.jpg' },
     { name: 'Flo H.', beruf: 'Metallbauer', foto: 'assets/team/flo.jpg' },
-    { name: 'Julian H.', beruf: 'Orthopädietechniker', foto: '' }
+    { name: 'Julian H.', beruf: 'Orthopädietechniker', foto: 'assets/team/julian.jpg' }
   ];
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
