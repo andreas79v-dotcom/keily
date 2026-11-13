@@ -1,0 +1,21 @@
+# Hält die kostenlose Supabase-Datenbank aktiv.
+# Supabase pausiert Free-Projekte nach etwa 7 Tagen ohne Datenbank-Anfragen.
+# Dieser Ablauf ruft dreimal täglich den öffentlichen Zeichnungsstand ab
+# (nur lesend, es wird nichts gespeichert).
+name: Supabase aktiv halten
+
+on:
+  schedule:
+    - cron: "17 6,13,20 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Zeichnungsstand abfragen
+        run: |
+          curl -fsS -X POST "https://ntwydmezshfjxvhwwhli.supabase.co/rest/v1/rpc/stand" \
+            -H "apikey: sb_publishable_GiWbUts3EQShmZlCSjuBJw_EzED6FMh" \
+            -H "Content-Type: application/json" \
+            -d '{}'
